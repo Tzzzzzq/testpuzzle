@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>慈荫之下 - 互动解谜版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        body {
+            background-color: #f5f1e8;
+            color: #3a2c1c;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #c9b79c;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            color: #5d4037;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            color: #8d6e63;
+            font-style: italic;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 1px solid #d9c8a9;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .search-box {
+            padding: 10px 15px;
+            border: 2px solid #c9b79c;
+            border-radius: 6px;
+            width: 300px;
+            font-size: 1rem;
+            background-color: #f9f5ec;
+        }
+        
+        .search-btn {
+            padding: 10px 20px;
+            background-color: #8d6e63;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .search-btn:hover {
+            background-color: #6d4c41;
+        }
+        
+        .player-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #8d6e63;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #5d4037;
+        }
+        
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            min-height: 600px;
+        }
+        
+        .main-area {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+        }
+        
+        .map-container {
+            background-color: #f9f5ec;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d9c8a9;
+        }
+        
+        .map-title {
+            font-size: 1.4rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .map-room {
+            aspect-ratio: 1;
+            border: 2px solid #c9b79c;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f2ecde;
+            position: relative;
+        }
+        
+        .map-room:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #8d6e63;
+        }
+        
+        .map-room.active {
+            background-color: #e8dfd0;
+            border-color: #5d4037;
+        }
+        
+        .map-room.discovered {
+            background-color: #d9c8a9;
+        }
+        
+        .room-icon {
+            font-size: 1.8rem;
+        }
+        
+        .room-label {
+            position: absolute;
+            bottom: 5px;
+            font-size: 0.8rem;
+            color: #5d4037;
+        }
+        
+        .scene-container {
+            background-color: #f9f5ec;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d9c8a9;
+            overflow-y: auto;
+        }
+        
+        .scene-title {
+            font-size: 1.6rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #c9b79c;
+        }
+        
+        .scene-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+        
+        .interactive-elements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .interactive-item {
+            flex: 1;
+            min-width: 200px;
+            background-color: #f2ecde;
+            border: 2px solid #c9b79c;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .interactive-item:hover {
+            background-color: #e8dfd0;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .item-title {
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .inventory-panel {
+            background-color: #f9f5ec;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d9c8a9;
+            flex: 1;
+        }
+        
+        .panel-title {
+            font-size: 1.3rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #c9b79c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .inventory-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .inventory-item {
+            background-color: #f2ecde;
+            border-radius: 6px;
+            padding: 10px;
+            border: 1px solid #d9c8a9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .inventory-item:hover {
+            background-color: #e8dfd0;
+        }
+        
+        .item-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #8d6e63;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        
+        .clues-panel {
+            background-color: #f9f5ec;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #d9c8a9;
+            flex: 1;
+        }
+        
+        .clues-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .clue-item {
+            background-color: #f2ecde;
+            border-radius: 6px;
+            padding: 8px 12px;
+            border: 1px solid #d9c8a9;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clue-item:hover {
+            background-color: #e8dfd0;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #f9f5ec;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #8d6e63;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #5d4037;
+            margin-bottom: 15px;
+        }
+        
+        .puzzle-area {
+            background-color: #f2ecde;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #d9c8a9;
+        }
+        
+        .puzzle-instructions {
+            font-style: italic;
+            color: #8d6e63;
+            margin-bottom: 15px;
+        }
+        
+        .dialogue {
+            background-color: #f2ecde;
+            border-left: 4px solid #8d6e63;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .dialogue-character {
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 5px;
+        }
+        
+        .action-feedback {
+            background-color: #e8f4f8;
+            border-left: 4px solid #5d8ca7;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #2c5d73;
+            animation: fadeIn 0.5s;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .key-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #f9f5ec;
+            border: 2px solid #c9b79c;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            cursor: pointer;
+        }
+        
+        .key-icon {
+            font-size: 2rem;
+            width: 60px;
+            height: 60px;
+            background-color: #8d6e63;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 300px;
+            background-color: white;
+            border: 1px solid #c9b79c;
+            border-radius: 0 0 6px 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+        
+        .search-result {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-result:hover {
+            background-color: #f5f1e8;
+        }
+        
+        .location-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #8d6e63;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 0 0 8px 0;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e8dfd0;
+            border-radius: 4px;
+            margin: 5px 0 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #8d6e63;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .hint {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9rem;
+        }
+        
+        .locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .locked:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            z-index: 100;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 1200px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                flex-direction: row;
+            }
+            
+            .inventory-panel, .clues-panel {
+                flex: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .map-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .sidebar {
+                flex-direction: column;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1 class="title">慈荫之下</h1>
+            <p class="subtitle">女性觉醒叙事解密游戏 - 互动探索版</p>
+        </header>
+        
+        <div class="top-bar">
+            <div class="player-stats">
+                <div class="stat-item">
+                    <div class="stat-label">女书碎片</div>
+                    <div class="stat-value" id="fragment-count">0/7</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">觉醒度</div>
+                    <div class="stat-value" id="awareness-level">0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">探索进度</div>
+                    <div class="stat-value" id="exploration">0%</div>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-box" id="search-box" placeholder="输入关键词搜索线索（如：钥匙、牌位、刺绣...）">
+                <button class="search-btn" id="search-btn">搜索</button>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="main-area">
+                <div class="map-container">
+                    <h3 class="map-title">慈荫堂平面图</h3>
+                    <div class="map-grid" id="map-grid">
+                        <!-- 地图房间将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="scene-container" id="scene-container">
+                    <h2 class="scene-title" id="scene-title">慈荫堂</h2>
+                    <div class="scene-content" id="scene-content">
+                        <!-- 场景内容将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="inventory-panel">
+                    <h3 class="panel-title">📦 随身物品</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="inventory-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="inventory-items" id="inventory-items">
+                        <!-- 物品将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+                
+                <div class="clues-panel">
+                    <h3 class="panel-title">🔍 已发现线索</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="clues-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="clues-list" id="clues-list">
+                        <!-- 线索将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 搜索弹窗 -->
+    <div class="modal" id="search-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <h3 class="modal-title" id="search-result-title">搜索结果</h3>
+            <div id="search-result-content">
+                <!-- 搜索结果内容 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 解谜弹窗 -->
+    <div class="modal" id="puzzle-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="puzzle-modal-close">&times;</button>
+            <h3 class="modal-title" id="puzzle-title">解谜</h3>
+            <div id="puzzle-content">
+                <!-- 解谜内容 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            currentRoom: 'frontyard',
+            fragments: 0,
+            awareness: 0,
+            exploration: 0,
+            cluesFound: 0,
+            totalClues: 12,
+            inventory: [
+                {id: 'recorder', name: '录音笔', description: '用于记录对话和环境的专业录音设备'},
+                {id: 'watch', name: '母亲的旧怀表', description: '表盖内侧有模糊的刻字，似乎是一个名字'},
+                {id: 'medicine', name: '抗焦虑药', description: '还剩半瓶，标签上有"必要时服用"的医嘱'},
+                {id: 'book', name: '《中国民间信仰批判》', description: '书页间夹着几片干枯的花瓣'}
+            ],
+            discoveredRooms: ['frontyard'],
+            discoveredClues: [],
+            roomStates: {
+                frontyard: { visited: true, completed: false },
+                mainhall: { visited: false, completed: false },
+                mainshrine: { visited: false, completed: false },
+                kitchen: { visited: false, completed: false },
+                backyard: { visited: false, completed: false },
+                backshrine: { visited: false, completed: false },
+                bedroom: { visited: false, completed: false },
+                study: { visited: false, completed: false }
+            },
+            hasKey: false,
+            hasFoundFragment1: false,
+            hasFoundRecipe: false
+        };
+
+        // 游戏数据
+        const gameData = {
+            rooms: [
+                {id: 'frontyard', name: '前院', icon: '🏮', description: '慈荫堂的入口前院'},
+                {id: 'mainhall', name: '正厅', icon: '🏛️', description: '家族议事和接待客人的主厅'},
+                {id: 'mainshrine', name: '主祠堂', icon: '🕯️', description: '供奉男性祖先的主祠堂'},
+                {id: 'kitchen', name: '厨房', icon: '🍳', description: '家族厨房，有祖传食谱'},
+                {id: 'backyard', name: '后院', icon: '🌳', description: '荒废的后院，通向女性祠堂'},
+                {id: 'backshrine', name: '后祠', icon: '🌸', description: '女性祠堂，供奉女性祖先'},
+                {id: 'bedroom', name: '祖母卧室', icon: '🛏️', description: '祖母生前的卧室'},
+                {id: 'study', name: '书房', icon: '📚', description: '家族书房，存放族谱'}
+            ],
+            
+            clues: [
+                {id: 'key_clue', keywords: ['钥匙', '铜钥匙', '开门'], room: 'backyard', 
+                 title: '铜钥匙的线索', content: '祖母临终前寄给你的铜钥匙，能打开后祠的门。钥匙柄上刻着模糊的"女"字。'},
+                {id: 'tablet_clue', keywords: ['牌位', '女性牌位', '无名'], room: 'backshrine',
+                 title: '无名牌位', content: '后祠中的女性牌位都只有"X门X氏"，没有姓名和生辰。'},
+                {id: 'inscription_clue', keywords: ['刻字', '香火绕梁', '木牌'], room: 'backshrine',
+                 title: '神秘刻字', content: '木牌上刻着："香火绕梁，困我魂灵三十年。"'},
+                {id: 'recipe_clue', keywords: ['食谱', '配料', '密码'], room: 'kitchen',
+                 title: '食谱密码', content: '祖母的食谱中有些配料比例很奇怪，似乎是某种密码。'},
+                {id: 'embroidery_clue', keywords: ['刺绣', '针脚', '女红'], room: 'backshrine',
+                 title: '刺绣碎片', content: '一块褪色的刺绣碎片，针脚形成特殊图案，可能是女书密码。'},
+                {id: 'diary_clue', keywords: ['日记', '笔记', '祖母'], room: 'bedroom',
+                 title: '祖母日记', content: '祖母的日记本，记录着她对家族女性处境的观察。'},
+                {id: 'genealogy_clue', keywords: ['族谱', '家谱', '记载'], room: 'study',
+                 title: '族谱缺失', content: '族谱中女性记载极为简略，与男性形成鲜明对比。'},
+                {id: 'window_clue', keywords: ['窗花', '投影', '月光'], room: 'backyard',
+                 title: '月光投影', content: '特定窗花在月光下会投射出特殊图案，似乎是暗号。'},
+                {id: 'medicine_clue', keywords: ['药', '抗焦虑', '症状'], room: 'bedroom',
+                 title: '抗焦虑药', content: '陈望舒随身携带的抗焦虑药，反映了她对家族压力的反应。'},
+                {id: 'book_clue', keywords: ['书', '信仰批判', '学术'], room: 'study',
+                 title: '学术研究', content: '《中国民间信仰批判》是陈望舒的研究工具，帮助她解构传统。'},
+                {id: 'watch_clue', keywords: ['怀表', '母亲', '遗物'], room: 'bedroom',
+                 title: '母亲的怀表', content: '母亲留下的旧怀表，表盖内侧有模糊的刻字，似乎是一个女性名字。'},
+                {id: 'mainhall_clue', keywords: ['正厅', '男性', '规矩'], room: 'mainhall',
+                 title: '性别规矩', content: '正厅中男性成员讨论家族事务，女性通常不得参与。'}
+            ],
+            
+            searchKeywords: {
+                '钥匙': {clue: 'key_clue', action: 'searchKey'},
+                '铜钥匙': {clue: 'key_clue', action: 'searchKey'},
+                '牌位': {clue: 'tablet_clue', action: 'examineTablets'},
+                '女性牌位': {clue: 'tablet_clue', action: 'examineTablets'},
+                '刻字': {clue: 'inscription_clue', action: 'examineInscription'},
+                '香火绕梁': {clue: 'inscription_clue', action: 'examineInscription'},
+                '刺绣': {clue: 'embroidery_clue', action: 'findEmbroidery'},
+                '女红': {clue: 'embroidery_clue', action: 'findEmbroidery'},
+                '食谱': {clue: 'recipe_clue', action: 'searchRecipe'},
+                '密码': {clue: 'recipe_clue', action: 'searchRecipe'},
+                '日记': {clue: 'diary_clue', action: 'searchDiary'},
+                '祖母': {clue: 'diary_clue', action: 'searchDiary'},
+                '族谱': {clue: 'genealogy_clue', action: 'searchGenealogy'},
+                '家谱': {clue: 'genealogy_clue', action: 'searchGenealogy'},
+                '窗花': {clue: 'window_clue', action: 'examineWindow'},
+                '投影': {clue: 'window_clue', action: 'examineWindow'},
+                '药': {clue: 'medicine_clue', action: 'examineMedicine'},
+                '书': {clue: 'book_clue', action: 'examineBook'},
+                '怀表': {clue: 'watch_clue', action: 'examineWatch'},
+                '母亲': {clue: 'watch_clue', action: 'examineWatch'},
+                '正厅': {clue: 'mainhall_clue', action: 'enterMainHall'},
+                '男性': {clue: 'mainhall_clue', action: 'enterMainHall'}
+            }
+        };
+
+        // DOM元素
+        const sceneContainer = document.getElementById('scene-container');
+        const sceneTitle = document.getElementById('scene-title');
+        const sceneContent = document.getElementById('scene-content');
+        const mapGrid = document.getElementById('map-grid');
+        const inventoryItems = document.getElementById('inventory-items');
+        const cluesList = document.getElementById('clues-list');
+        const fragmentCount = document.getElementById('fragment-count');
+        const awarenessLevel = document.getElementById('awareness-level');
+        const explorationElement = document.getElementById('exploration');
+        const searchBox = document.getElementById('search-box');
+        const searchBtn = document.getElementById('search-btn');
+        const searchModal = document.getElementById('search-modal');
+        const searchResultContent = document.getElementById('search-result-content');
+        const searchResultTitle = document.getElementById('search-result-title');
+        const modalClose = document.getElementById('modal-close');
+        const puzzleModal = document.getElementById('puzzle-modal');
+        const puzzleContent = document.getElementById('puzzle-content');
+        const puzzleTitle = document.getElementById('puzzle-title');
+        const puzzleModalClose = document.getElementById('puzzle-modal-close');
+        const inventoryProgress = document.getElementById('inventory-progress');
+        const cluesProgress = document.getElementById('clues-progress');
+
+        // 初始化游戏
+        function initGame() {
+            renderMap();
+            renderRoom('frontyard');
+            updateUI();
+            
+            // 事件监听
+            searchBtn.addEventListener('click', handleSearch);
+            searchBox.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+            
+            modalClose.addEventListener('click', () => {
+                searchModal.style.display = 'none';
+            });
+            
+            puzzleModalClose.addEventListener('click', () => {
+                puzzleModal.style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', (e) => {
+                if (e.target === searchModal) {
+                    searchModal.style.display = 'none';
+                }
+                if (e.target === puzzleModal) {
+                    puzzleModal.style.display = 'none';
+                }
+            });
+        }
+
+        // 渲染地图
+        function renderMap() {
+            mapGrid.innerHTML = '';
+            
+            gameData.rooms.forEach(room => {
+                const roomDiv = document.createElement('div');
+                roomDiv.className = `map-room ${gameState.roomStates[room.id].visited ? 'discovered' : ''} ${gameState.currentRoom === room.id ? 'active' : ''} ${!gameState.roomStates[room.id].visited ? 'locked' : ''}`;
+                roomDiv.dataset.room = room.id;
+                
+                if (gameState.roomStates[room.id].visited) {
+                    roomDiv.onclick = () => {
+                        if (gameState.currentRoom !== room.id) {
+                            renderRoom(room.id);
+                        }
+                    };
+                }
+                
+                roomDiv.innerHTML = `
+                    <div class="room-icon">${room.icon}</div>
+                    <div class="room-label">${room.name}</div>
+                `;
+                
+                mapGrid.appendChild(roomDiv);
+            });
+        }
+
+        // 渲染房间
+        function renderRoom(roomId) {
+            gameState.currentRoom = roomId;
+            gameState.roomStates[roomId].visited = true;
+            
+            if (!gameState.discoveredRooms.includes(roomId)) {
+                gameState.discoveredRooms.push(roomId);
+                gameState.exploration = Math.min(100, gameState.exploration + 10);
+            }
+            
+            renderMap();
+            
+            switch(roomId) {
+                case 'frontyard':
+                    renderFrontYard();
+                    break;
+                case 'mainhall':
+                    renderMainHall();
+                    break;
+                case 'mainshrine':
+                    renderMainShrine();
+                    break;
+                case 'kitchen':
+                    renderKitchen();
+                    break;
+                case 'backyard':
+                    renderBackYard();
+                    break;
+                case 'backshrine':
+                    renderBackShrine();
+                    break;
+                case 'bedroom':
+                    renderBedroom();
+                    break;
+                case 'study':
+                    renderStudy();
+                    break;
+            }
+            
+            updateUI();
+        }
+
+        // 渲染前院
+        function renderFrontYard() {
+            sceneTitle.textContent = '前院 - 慈荫堂';
+            sceneContent.innerHTML = `
+                <div class="scene-content">
+                    <p><strong>陈望舒</strong>站在老宅"慈荫堂"的前院。推开沉重的木门，尘土在午后的阳光中飞舞，像无数细小的记忆碎片。</p>
+                    
+                    <div class="dialogue">
+                        <div class="dialogue-character">大伯陈建国：</div>
+                        <p>"望舒回来了？正好，明天就是清明祭祀，你也该尽尽孝心了。"</p>
+                    </div>
+                    
+                    <p>作为民俗学研究生，你此次返乡是为了记录这个古老家族最后的传统祭祀。你的背包里装着录音笔、相机，还有一本《中国民间信仰批判》。</p>
+                    
+                    <div class="hint">💡 提示：点击下方的互动物品进行探索，或使用搜索框输入关键词寻找线索。</div>
+                    
+                    <div class="interactive-elements">
+                        <div class="interactive-item" onclick="talkToUncle()">
+                            <div class="item-title">👨 与大伯对话</div>
+                            <p>询问关于祭祀和家族历史的事情</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="checkBackpack()">
+                            <div class="item-title">🎒 检查背包</div>
+                            <p>查看随身携带的研究工具和个人物品</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="enterMainHall()">
+                            <div class="item-title">🚪 进入正厅</div>
+                            <p>进入慈荫堂的主厅，男性成员正在议事</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="goToBackyard()">
+                            <div class="item-title">🌳 前往后院</div>
+                            <p>绕到宅子后方，那里可能有被隐藏的秘密</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 与大伯对话
+        function talkToUncle() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你试图询问关于祭祀的细节，但大伯明显回避了你的问题。<br>
+                "女子不问祭祀之事，"他说，"你只需按照规矩来就行。"<br>
+                💡 发现了性别区隔现象，觉醒度 +5%
+            `;
+            
+            sceneContent.appendChild(feedback);
+            gameState.awareness = Math.min(100, gameState.awareness + 5);
+            
+            // 添加线索
+            if (!gameState.discoveredClues.includes('mainhall_clue')) {
+                addClue('mainhall_clue');
+            }
+            
+            updateUI();
+        }
+
+        // 检查背包
+        function checkBackpack() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你检查了背包里的物品：<br>
+                • 录音笔 - 用于记录对话和环境<br>
+                • 母亲的旧怀表 - 表盖内侧有模糊刻字<br>
+                • 抗焦虑药 - 标签上有"必要时服用"<br>
+                • 《中国民间信仰批判》 - 研究工具<br>
+                📦 已记录到物品栏
+            `;
+            
+            sceneContent.appendChild(feedback);
+            updateUI();
+        }
+
+        // 进入正厅
+        function enterMainHall() {
+            renderRoom('mainhall');
+        }
+
+        // 前往后院
+        function goToBackyard() {
+            renderRoom('backyard');
+        }
+
+        // 渲染正厅
+        function renderMainHall() {
+            sceneTitle.textContent = '正厅 - 慈荫堂';
+            sceneContent.innerHTML = `
+                <div class="scene-content">
+                    <p>正厅是慈荫堂最气派的房间，但此刻只有男性成员在场。几位叔伯正在讨论明天的祭祀安排。</p>
+                    
+                    <div class="dialogue">
+                        <div class="dialogue-character">你：</div>
+                        <p>"大伯，我想进主祠堂看看，为我的研究做些记录。"</p>
+                    </div>
+                    
+                    <div class="dialogue">
+                        <div class="dialogue-character">大伯陈建国：</div>
+                        <p>"女子不入正祠，这是规矩。"他的语气冷硬，"你就在外面等着吧。"</p>
+                    </div>
+                    
+                    <p>你注意到他刻意回避了你的目光。其他男性成员也移开了视线。</p>
+                    
+                    <div class="flashback">
+                        <p>你想起祖母临终前寄给你的那把铜钥匙，还有她颤抖的字迹："后祠...真相..."</p>
+                    </div>
+                    
+                    <div class="interactive-elements">
+                        <div class="interactive-item" onclick="insistToEnter()">
+                            <div class="item-title">🚪 坚持要进主祠堂</div>
+                            <p>继续请求进入主祠堂，看看他们的反应</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="observeMen()">
+                            <div class="item-title">👀 观察男性成员</div>
+                            <p>仔细观察厅内男性成员的言行举止</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="useRecorder()">
+                            <div class="item-title">🎤 使用录音笔</div>
+                            <p>偷偷打开录音笔，记录厅内的对话</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="searchKeyFront()">
+                            <div class="item-title">🔍 寻找钥匙线索</div>
+                            <p>在正厅寻找与后祠钥匙相关的线索</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 坚持要进主祠堂
+        function insistToEnter() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你的坚持让他们感到不安。二伯皱眉道："女孩子家，不要多事。"<br>
+                三叔则直接说："祠堂重地，女子进去不吉利。"<br>
+                💔 感受到明显的性别排斥，觉醒度 +10%
+            `;
+            
+            sceneContent.appendChild(feedback);
+            gameState.awareness = Math.min(100, gameState.awareness + 10);
+            
+            if (!gameState.discoveredClues.includes('mainhall_clue')) {
+                addClue('mainhall_clue');
+            }
+            
+            updateUI();
+        }
+
+        // 观察男性成员
+        function observeMen() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你注意到：<br>
+                • 所有决策都由男性做出<br>
+                • 女性话题被刻意回避<br>
+                • 当谈到祭祀细节时，他们会压低声音<br>
+                🔍 获得观察线索，觉醒度 +8%
+            `;
+            
+            sceneContent.appendChild(feedback);
+            gameState.awareness = Math.min(100, gameState.awareness + 8);
+            updateUI();
+        }
+
+        // 使用录音笔
+        function useRecorder() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你悄悄打开录音笔，录下了片段对话：<br>
+                "...女子不得入内，这是祖宗规矩..."<br>
+                "...后祠那边也要注意，别让望舒发现..."<br>
+                🎤 录到了重要对话，线索 +1
+            `;
+            
+            sceneContent.appendChild(feedback);
+            
+            if (!gameState.discoveredClues.includes('mainhall_clue')) {
+                addClue('mainhall_clue');
+            }
+            
+            updateUI();
+        }
+
+        // 在前厅寻找钥匙线索
+        function searchKeyFront() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你在正厅的抽屉里找到一封泛黄的信件，是祖母的笔迹：<br>
+                "...钥匙藏在老地方，只有你知道的地方..."<br>
+                🔑 找到了钥匙线索！
+            `;
+            
+            sceneContent.appendChild(feedback);
+            
+            if (!gameState.discoveredClues.includes('key_clue')) {
+                addClue('key_clue');
+            }
+            
+            updateUI();
+        }
+
+        // 渲染后院
+        function renderBackYard() {
+            sceneTitle.textContent = '后院 - 慈荫堂';
+            sceneContent.innerHTML = `
+                <div class="scene-content">
+                    <p>后院几乎被荒草淹没，与精心打理的前院形成鲜明对比。这里荒凉而寂静。</p>
+                    
+                    <p>在院子深处，你看到了那扇几乎被藤蔓完全覆盖的小木门——这就是祖母说的"后祠"入口。</p>
+                    
+                    <div class="dialogue">
+                        <div class="dialogue-character">内心独白：</div>
+                        <p>"祖母临终前说钥匙在'老地方'...是哪里呢？"</p>
+                    </div>
+                    
+                    <div class="hint">💡 提示：尝试搜索"钥匙"或"铜钥匙"来触发相关线索。</div>
+                    
+                    <div class="interactive-elements">
+                        <div class="interactive-item" onclick="examineBackDoor()">
+                            <div class="item-title">🚪 检查后祠木门</div>
+                            <p>一扇被藤蔓覆盖的小木门，门上的铜锁已经锈迹斑斑</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="searchForKey()">
+                            <div class="item-title">🔍 在院中寻找钥匙</div>
+                            <p>在荒草丛中寻找祖母说的"老地方"</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="examineWindow()">
+                            <div class="item-title">🪟 观察窗户图案</div>
+                            <p>后祠的窗户上有精美的木雕窗花</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="solveKeyPuzzle()">
+                            <div class="item-title">🎯 解谜：钥匙在哪里？</div>
+                            <p>根据祖母的提示，解开钥匙位置的谜题</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 检查后祠木门
+        function examineBackDoor() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你走近那扇小木门，发现：<br>
+                • 铜锁样式很古老，有明显的磨损痕迹<br>
+                • 锁孔周围比其他部分干净，似乎经常使用<br>
+                • 门缝中有微弱的檀香味飘出<br>
+                🔍 发现了线索，探索进度 +5%
+            `;
+            
+            sceneContent.appendChild(feedback);
+            gameState.exploration = Math.min(100, gameState.exploration + 5);
+            updateUI();
+        }
+
+        // 在院中寻找钥匙
+        function searchForKey() {
+            if (!gameState.hasKey) {
+                const feedback = document.createElement('div');
+                feedback.className = 'action-feedback';
+                feedback.innerHTML = `
+                    你在荒草丛中仔细寻找，突然想起什么...<br>
+                    "老地方"——小时候祖母经常带你坐在后院的那块青石板上！<br>
+                    你搬开青石板，下面果然有一个小铁盒！<br>
+                    🎉 获得：祖母的铜钥匙<br>
+                    📦 已添加到物品栏
+                `;
+                
+                sceneContent.appendChild(feedback);
+                
+                gameState.hasKey = true;
+                gameState.inventory.push({
+                    id: 'key',
+                    name: '祖母的铜钥匙',
+                    description: '能打开后祠的门，钥匙柄上刻着模糊的"女"字'
+                });
+                
+                if (!gameState.discoveredClues.includes('key_clue')) {
+                    addClue('key_clue');
+                }
+                
+                updateUI();
+            } else {
+                const feedback = document.createElement('div');
+                feedback.className = 'action-feedback';
+                feedback.innerHTML = '你已经找到了铜钥匙，现在可以用它打开后祠的门了。';
+                sceneContent.appendChild(feedback);
+            }
+        }
+
+        // 解谜：钥匙位置
+        function solveKeyPuzzle() {
+            puzzleTitle.textContent = '解谜：钥匙在哪里？';
+            puzzleContent.innerHTML = `
+                <div class="puzzle-instructions">
+                    根据祖母的提示，钥匙藏在"老地方"。<br>
+                    请从以下选项中选择最可能的藏匿地点：
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <div class="interactive-item" onclick="puzzleAnswer('wrong1')" style="margin-bottom: 10px;">
+                        A. 前院的槐树下（祖母经常在那里乘凉）
+                    </div>
+                    <div class="interactive-item" onclick="puzzleAnswer('wrong2')" style="margin-bottom: 10px;">
+                        B. 厨房的灶台里（祖母经常做饭的地方）
+                    </div>
+                    <div class="interactive-item" onclick="puzzleAnswer('correct')" style="margin-bottom: 10px;">
+                        C. 后院的青石板下（祖母常带你坐的地方）
+                    </div>
+                    <div class="interactive-item" onclick="puzzleAnswer('wrong3')">
+                        D. 卧室的枕头里（祖母睡觉的地方）
+                    </div>
+                </div>
+            `;
+            
+            puzzleModal.style.display = 'flex';
+        }
+
+        // 解谜答案
+        function puzzleAnswer(answer) {
+            if (answer === 'correct') {
+                puzzleContent.innerHTML = `
+                    <div class="action-feedback">
+                        ✅ 正确！你想起了小时候的情景：<br>
+                        祖母常带你坐在后院的青石板上，给你讲女性祖先的故事。<br>
+                        "这是我们的小秘密，"她总是这样说。<br>
+                        🎉 获得：祖母的铜钥匙<br>
+                        💡 觉醒度 +10%
+                    </div>
+                `;
+                
+                if (!gameState.hasKey) {
+                    gameState.hasKey = true;
+                    gameState.inventory.push({
+                        id: 'key',
+                        name: '祖母的铜钥匙',
+                        description: '能打开后祠的门，钥匙柄上刻着模糊的"女"字'
+                    });
+                }
+                
+                gameState.awareness = Math.min(100, gameState.awareness + 10);
+                
+                if (!gameState.discoveredClues.includes('key_clue')) {
+                    addClue('key_clue');
+                }
+                
+                updateUI();
+            } else {
+                puzzleContent.innerHTML = `
+                    <div class="action-feedback" style="background-color: #ffebee; border-color: #f44336;">
+                        ❌ 不太对。再想想祖母的提示："老地方"一定是只有你们两人知道的地方。
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染后祠
+        function renderBackShrine() {
+            sceneTitle.textContent = '后祠 - 女性祠堂';
+            
+            if (!gameState.hasKey) {
+                sceneContent.innerHTML = `
+                    <div class="scene-content">
+                        <p>后祠的木门紧闭着，门上的铜锁需要钥匙才能打开。</p>
+                        <div class="hint">🔑 你需要找到祖母的铜钥匙才能进入后祠。可以尝试搜索"钥匙"来获取线索。</div>
+                        
+                        <div class="interactive-item" onclick="renderRoom('backyard')" style="max-width: 300px; margin: 20px auto;">
+                            <div class="item-title">↩️ 返回后院</div>
+                            <p>回到后院寻找钥匙线索</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            sceneContent.innerHTML = `
+                <div class="scene-content">
+                    <p>推开后祠的门，一股陈旧的气息扑面而来。这里与主祠堂的华丽截然不同——</p>
+                    <p><strong>简陋、昏暗、被遗忘。</strong></p>
+                    
+                    <p>你看到了一排排女性的牌位。与主祠堂金漆描绘的男性牌位不同，这里的牌位简陋得多，而且——</p>
+                    <p><strong>所有牌位上都只有"X门X氏"，没有姓名，没有生辰卒年。</strong></p>
+                    
+                    <div class="hint">💡 提示：点击场景中的物品进行交互，或搜索关键词如"牌位"、"刺绣"等获取更多线索。</div>
+                    
+                    <div class="interactive-elements">
+                        <div class="interactive-item" onclick="examineTablets()">
+                            <div class="item-title">🪦 仔细检查女性牌位</div>
+                            <p>查看这些无名牌位的细节，寻找隐藏信息</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="examineShrine()">
+                            <div class="item-title">🕯️ 检查神龛深处</div>
+                            <p>神龛最深处似乎有一块与众不同的木牌</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="searchBookshelf()">
+                            <div class="item-title">📚 检查书架</div>
+                            <p>一个落满灰尘的书架，上面放着陈旧的女红工具</p>
+                        </div>
+                        
+                        <div class="interactive-item" onclick="embroideryPuzzle()">
+                            <div class="item-title">🧵 解谜：刺绣图案</div>
+                            <p>你发现了一块刺绣碎片，上面有奇怪的图案</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 检查牌位
+        function examineTablets() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                你仔细查看这些牌位：<br>
+                • 陈门李氏<br>
+                • 王门陈氏<br>
+                • 张门王氏<br>
+                ...总共十七个牌位，没有一个人的全名。<br>
+                💔 感受到历史被抹去的寒意，觉醒度 +15%
+            `;
+            
+            sceneContent.appendChild(feedback);
+            gameState.awareness = Math.min(100, gameState.awareness + 15);
+            
+            if (!gameState.discoveredClues.includes('tablet_clue')) {
+                addClue('tablet_clue');
+            }
+            
+            updateUI();
+        }
+
+        // 检查神龛
+        function examineShrine() {
+            const feedback = document.createElement('div');
+            feedback.className = 'action-feedback';
+            feedback.innerHTML = `
+                在神龛最深处，你发现了一块被白蚁蛀蚀的旧木牌，上面有纤细的刻字：<br>
+                <div style="text-align: center; font-style: italic; margin: 10px 0; padding: 15px; background-color: #f2ecde; border-radius: 5px; border-left: 3px solid #8d6e63;">
+                    "香火绕梁，困我魂灵三十年。"
+                </div>
+                木牌背面有一行小字：<strong>"找回我们的名字。"</strong><br>
+                🔍 发现了关键线索！
+            `;
+            
+            sceneContent.appendChild(feedback);
+            
+            if (!gameState.discoveredClues.includes('inscription_clue')) {
+                addClue('inscription_clue');
+            }
+            
+            updateUI();
+            
+            // 2秒后添加新选项
+            setTimeout(() => {
+                const newOption = document.createElement('div');
+                newOption.className = 'interactive-item';
+                newOption.onclick = findEmbroidery;
+                newOption.innerHTML = `
+                    <div class="item-title">🔍 检查木牌下方</div>
+                    <p>木牌下方似乎有一个不易察觉的暗格...</p>
+                `;
+                sceneContent.querySelector('.interactive-elements').appendChild(newOption);
+            }, 2000);
+        }
+
+        // 刺绣解谜
+        function embroideryPuzzle() {
+            puzzleTitle.textContent = '解谜：刺绣图案';
+            puzzleContent.innerHTML = `
+                <div class="puzzle-instructions">
+                    你发现了一块刺绣碎片，上面的图案似乎是某种密码。<br>
+                    请从以下选项中选择最可能的解读：
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="font-size: 3rem; letter-spacing: 5px; margin: 20px 0;">🌺🌿🕊️</div>
+                    <p>图案由花朵、藤蔓和飞鸟组成</p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <div class="interactive-item" onclick="embroideryAnswer('wrong1')" style="margin-bottom: 10px;">
+                        A. 家族徽章，代表富贵吉祥
+                    </div>
+                    <div class="interactive-item" onclick="embroideryAnswer('wrong2')" style="margin-bottom: 10px;">
+                        B. 祭祀图案，用于祈福避邪
+                    </div>
+                    <div class="interactive-item" onclick="embroideryAnswer('correct')" style="margin-bottom: 10px;">
+                        C. 女书密码，花朵=女，藤蔓=束缚，飞鸟=自由
+                    </div>
+                    <div class="interactive-item" onclick="embroideryAnswer('wrong3')">
+                        D. 装饰图案，没有特殊含义
+                    </div>
+                </div>
+            `;
+            
+            puzzleModal.style.display = 'flex';
+        }
+
+        // 刺绣答案
+        function embroideryAnswer(answer) {
+            if (answer === 'correct') {
+                puzzleContent.innerHTML = `
+                    <div class="action-feedback">
+                        ✅ 正确！你认出了这是女书密码：<br>
+                        • 花朵代表"女性"<br>
+                        • 藤蔓代表"束缚"<br>
+                        • 飞鸟代表"渴望自由"<br>
+                        🎉 获得：刺绣碎片 (1/7)<br>
+                        💡 觉醒度 +20%
+                    </div>
+                `;
+                
+                if (!gameState.hasFoundFragment1) {
+                    gameState.hasFoundFragment1 = true;
+                    gameState.fragments = 1;
+                    gameState.inventory.push({
+                        id: 'embroidery1',
+                        name: '刺绣碎片 (1/7)',
+                        description: '一块褪色的刺绣，上面是女书密码：花朵=女，藤蔓=束缚，飞鸟=自由'
+                    });
+                }
+                
+                gameState.awareness = Math.min(100, gameState.awareness + 20);
+                
+                if (!gameState.discoveredClues.includes('embroidery_clue')) {
+                    addClue('embroidery_clue');
+                }
+                
+                updateUI();
+            } else {
+                puzzleContent.innerHTML = `
+                    <div class="action-feedback" style="background-color: #ffebee; border-color: #f44336;">
+                        ❌ 不太对。结合你的民俗学知识再想想，这可能是一种女性专用的文字系统。
+                    </div>
+                `;
+            }
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = searchBox.value.trim().toLowerCase();
+            if (!query) return;
+            
+            const keywordInfo = gameData.searchKeywords[query];
+            
+            if (keywordInfo) {
+                const clue = gameData.clues.find(c => c.id === keywordInfo.clue);
+                
+                if (clue) {
+                    // 如果还没有发现这个线索，添加它
+                    if (!gameState.discoveredClues.includes(keywordInfo.clue)) {
+                        addClue(keywordInfo.clue);
+                    }
+                    
+                    // 显示搜索结果
+                    searchResultTitle.textContent = `搜索结果：${clue.title}`;
+                    searchResultContent.innerHTML = `
+                        <div style="margin-bottom: 20px;">
+                            <h4>线索内容：</h4>
+                            <p>${clue.content}</p>
+                        </div>
+                        
+                        <div style="background-color: #f2ecde; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h4>相关位置：</h4>
+                            <p>这个线索与<strong>${clue.room}</strong>有关。</p>
+                            <button class="search-btn" onclick="renderRoom('${clue.room}'); searchModal.style.display='none'" style="margin-top: 10px;">
+                                前往该位置
+                            </button>
+                        </div>
+                        
+                        ${keywordInfo.action ? `
+                        <div style="margin-top: 20px;">
+                            <button class="search-btn" onclick="${keywordInfo.action}(); searchModal.style.display='none'">
+                                执行相关动作
+                            </button>
+                        </div>
+                        ` : ''}
+                    `;
+                    
+                    searchModal.style.display = 'flex';
+                    
+                    // 如果是钥匙搜索，并且还没有钥匙，自动找到钥匙
+                    if (query.includes('钥匙') && !gameState.hasKey) {
+                        searchForKey();
+                    }
+                }
+            } else {
+                searchResultTitle.textContent = '搜索结果';
+                searchResultContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p>没有找到与"${query}"相关的线索。</p>
+                        <p>💡 提示：尝试搜索以下关键词：</p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 15px;">
+                            ${Object.keys(gameData.searchKeywords).slice(0, 6).map(keyword => 
+                                `<span style="background-color: #f2ecde; padding: 5px 10px; border-radius: 4px;">${keyword}</span>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                searchModal.style.display = 'flex';
+            }
+            
+            // 清空搜索框
+            searchBox.value = '';
+        }
+
+        // 添加线索
+        function addClue(clueId) {
+            if (!gameState.discoveredClues.includes(clueId)) {
+                gameState.discoveredClues.push(clueId);
+                gameState.cluesFound = gameState.discoveredClues.length;
+                
+                const clue = gameData.clues.find(c => c.id === clueId);
+                if (clue) {
+                    updateUI();
+                    
+                    // 显示提示
+                    const feedback = document.createElement('div');
+                    feedback.className = 'action-feedback';
+                    feedback.innerHTML = `🔍 发现新线索：${clue.title}`;
+                    sceneContent.appendChild(feedback);
+                }
+            }
+        }
+
+        // 更新UI
+        function updateUI() {
+            // 更新统计
+            fragmentCount.textContent = `${gameState.fragments}/7`;
+            awarenessLevel.textContent = `${gameState.awareness}%`;
+            explorationElement.textContent = `${gameState.exploration}%`;
+            
+            // 更新物品栏
+            const inventoryPercent = Math.min(100, (gameState.inventory.length / 12) * 100);
+            inventoryProgress.style.width = `${inventoryPercent}%`;
+            
+            inventoryItems.innerHTML = '';
+            gameState.inventory.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'inventory-item';
+                itemElement.onclick = () => {
+                    alert(`${item.name}\n\n${item.description}`);
+                };
+                itemElement.innerHTML = `
+                    <div class="item-icon">📦</div>
+                    <div>
+                        <div style="font-weight: bold;">${item.name}</div>
+                        <div style="font-size: 0.9rem; color: #666;">${item.description.substring(0, 30)}${item.description.length > 30 ? '...' : ''}</div>
+                    </div>
+                `;
+                inventoryItems.appendChild(itemElement);
+            });
+            
+            if (gameState.inventory.length === 0) {
+                inventoryItems.innerHTML = '<div style="text-align: center; color: #8d6e63; padding: 20px;">物品栏空空如也</div>';
+            }
+            
+            // 更新线索列表
+            const cluesPercent = Math.min(100, (gameState.cluesFound / gameState.totalClues) * 100);
+            cluesProgress.style.width = `${cluesPercent}%`;
+            
+            cluesList.innerHTML = '';
+            gameState.discoveredClues.forEach(clueId => {
+                const clue = gameData.clues.find(c => c.id === clueId);
+                if (clue) {
+                    const clueElement = document.createElement('div');
+                    clueElement.className = 'clue-item';
+                    clueElement.onclick = () => {
+                        alert(`${clue.title}\n\n${clue.content}`);
+                    };
+                    clueElement.textContent = clue.title;
+                    cluesList.appendChild(clueElement);
+                }
+            });
+            
+            if (gameState.discoveredClues.length === 0) {
+                cluesList.innerHTML = '<div style="text-align: center; color: #8d6e63; padding: 20px;">尚未发现任何线索</div>';
+            }
+        }
+
+        // 其他房间的渲染函数（简略实现）
+        function renderMainShrine() {
+            sceneTitle.textContent = '主祠堂 - 禁止进入';
+            sceneContent.innerHTML = '<p>主祠堂大门紧闭，门上贴着"女子禁入"的字条。</p>';
+        }
+        
+        function renderKitchen() {
+            sceneTitle.textContent = '厨房';
+            sceneContent.innerHTML = '<p>厨房场景（待开发）</p>';
+        }
+        
+        function renderBedroom() {
+            sceneTitle.textContent = '祖母卧室';
+            sceneContent.innerHTML = '<p>卧室场景（待开发）</p>';
+        }
+        
+        function renderStudy() {
+            sceneTitle.textContent = '书房';
+            sceneContent.innerHTML = '<p>书房场景（待开发）</p>';
+        }
+
+        // 其他互动函数
+        function searchRecipe() {
+            if (!gameState.hasFoundRecipe) {
+                const feedback = document.createElement('div');
+                feedback.className = 'action-feedback';
+                feedback.innerHTML = `
+                    你在厨房找到了祖母的食谱手抄本：<br>
+                    "红糖三钱，白糖二钱，蜂蜜一钱..."<br>
+                    这些比例似乎暗含某种密码。<br>
+                    📖 获得：食谱密码本
+                `;
+                
+                sceneContent.appendChild(feedback);
+                gameState.hasFoundRecipe = true;
+                gameState.inventory.push({
+                    id: 'recipe',
+                    name: '食谱密码本',
+                    description: '祖母的食谱，奇怪的配料比例可能是女书密码'
+                });
+                
+                if (!gameState.discoveredClues.includes('recipe_clue')) {
+                    addClue('recipe_clue');
+                }
+                
+                updateUI();
+            }
+        }
+
+        function findEmbroidery() {
+            if (!gameState.hasFoundFragment1) {
+                const feedback = document.createElement('div');
+                feedback.className = 'action-feedback';
+                feedback.innerHTML = `
+                    你在木牌下方的暗格里发现了一块刺绣碎片！<br>
+                    🎉 获得：刺绣碎片 (1/7)<br>
+                    💡 觉醒度 +10%
+                `;
+                
+                sceneContent.appendChild(feedback);
+                gameState.hasFoundFragment1 = true;
+                gameState.fragments = 1;
+                gameState.awareness = Math.min(100, gameState.awareness + 10);
+                gameState.inventory.push({
+                    id: 'embroidery1',
+                    name: '刺绣碎片 (1/7)',
+                    description: '在木牌暗格中发现的刺绣碎片'
+                });
+                
+                if (!gameState.discoveredClues.includes('embroidery_clue')) {
+                    addClue('embroidery_clue');
+                }
+                
+                updateUI();
+            }
+        }
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
